@@ -84,19 +84,8 @@ namespace TollFeeCalculator
             else return 0;
         }
 
-        private static Boolean IsTollFreeDate(DateTime date)
-        {
-            if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday) return true;
-
-            int year = date.Year;
-            int month = date.Month;
-            int day = date.Day;
-
-            // TODO: Figure out bank holidays
-
-            return false;
-        }
-
+        private static bool IsTollFreeDate(DateTime date) => 
+            date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || HolidayHelper.IsSwedishBankHoliday(date);
 
         private enum TimeFrameVariant
         {

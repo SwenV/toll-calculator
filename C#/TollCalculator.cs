@@ -6,6 +6,23 @@ namespace TollFeeCalculator
 {
     public static class TollCalculator
     {
+        private const int lowFee = 8;
+        private const int mediumFee = 13;
+        private const int highFee = 18;
+        private static readonly TollFee[] fees = [
+            new(06, 00, 0),
+            new(06, 30, lowFee),
+            new(07, 00, mediumFee),
+            new(08, 00, highFee),
+            new(08, 30, mediumFee),
+            new(15, 00, lowFee),
+            new(15, 30, mediumFee),
+            new(17, 00, highFee),
+            new(18, 00, mediumFee),
+            new(18, 30, lowFee),
+        ];
+
+
 
         /**
          * Calculate the total toll fee for one day
@@ -17,7 +34,7 @@ namespace TollFeeCalculator
 
         public static int GetTollFee(IVehicle vehicle, DateTime[] dates)
         {
-            if (vehicle.IsTollFree())
+            if (vehicle.IsTollFree() || IsTollFreeDate(dates[0]))
                 return 0;
 
             /*  From the requirements:
@@ -64,25 +81,7 @@ namespace TollFeeCalculator
 
             return GetTotalFee(dates, 60, TimeFrameVariant.ExtendingOnHigherFee);
         }
-
-        public static int GetTollFee(DateTime date)
-        {
-            if (IsTollFreeDate(date)) return 0;
-
-            int hour = date.Hour;
-            int minute = date.Minute;
-
-            if (hour == 6 && minute >= 0 && minute <= 29) return 8;
-            else if (hour == 6 && minute >= 30 && minute <= 59) return 13;
-            else if (hour == 7 && minute >= 0 && minute <= 59) return 18;
-            else if (hour == 8 && minute >= 0 && minute <= 29) return 13;
-            else if (hour >= 8 && hour <= 14 && minute >= 30 && minute <= 59) return 8;
-            else if (hour == 15 && minute >= 0 && minute <= 29) return 13;
-            else if (hour == 15 && minute >= 0 || hour == 16 && minute <= 59) return 18;
-            else if (hour == 17 && minute >= 0 && minute <= 59) return 13;
-            else if (hour == 18 && minute >= 0 && minute <= 29) return 8;
-            else return 0;
-        }
+                
 
         private static bool IsTollFreeDate(DateTime date) => 
             date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || HolidayHelper.IsSwedishBankHoliday(date);
@@ -129,5 +128,15 @@ namespace TollFeeCalculator
 
             return total;
         }
+
+        private static int GetTollFee(DateTime date)
+        {
+            foreach (TollFee fee in fees)
+                if (fee.TryGetFee(date, out int v))
+                    return v;
+
+            return 0;
+        }
+
     }
 }

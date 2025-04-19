@@ -28,13 +28,31 @@ namespace TollFeeCalculator
          * Calculate the total toll fee for one day
          *
          * @param vehicle - the vehicle
-         * @param dates   - date and time of all passes on one day
+         * @param times   - date and time of all passes on one day
          * @return - the total toll fee for that day
          */
 
-        public static int GetTollFee(IVehicle vehicle, DateTime[] dates)
+        public static int GetTollFee(IVehicle vehicle, DateTime[] times)
         {
-            if (vehicle.IsTollFree() || IsTollFreeDate(dates[0]))
+            ArgumentNullException.ThrowIfNull(vehicle);
+            ArgumentNullException.ThrowIfNull(times);
+            if (times.Length == 0)
+                throw new ArgumentException("No times supplied", nameof(times));
+
+            DateTime prev = times[0];
+            for (int i = 1; i < times.Length; i++)
+            {
+                DateTime date = times[i];
+                if (date.Year != prev.Year || date.Month != prev.Month || date.Day != prev.Day)
+                    throw new ArgumentException("All times must be from the same day", nameof(times));
+                else if (prev > date)
+                    throw new ArgumentException("All times must be in ascending order", nameof(times));
+                else if (prev == date)
+                    throw new ArgumentException("Duplicate times found", nameof(times));
+                prev = date;
+            }
+
+            if (vehicle.IsTollFree() || IsTollFreeDate(times[0]))
                 return 0;
 
             /*  From the requirements:
@@ -79,7 +97,7 @@ namespace TollFeeCalculator
                 In conclusion, the requirement of "A vehicle should only be charged once an hour" is rather unclear.
             */
 
-            return GetTotalFee(dates, 60, TimeFrameVariant.ExtendingOnHigherFee);
+            return GetTotalFee(times, 60, TimeFrameVariant.ExtendingOnHigherFee);
         }
                 
 
@@ -93,33 +111,33 @@ namespace TollFeeCalculator
             ExtendingOnHigherFee,
         }
 
-        private static int GetTotalFee(DateTime[] dates, int max, TimeFrameVariant variant)
+        private static int GetTotalFee(DateTime[] times, int max, TimeFrameVariant variant)
         {
             int total = 0;
             int prevFee = 0;
             DateTime? prevTime = null;
 
-            foreach (DateTime date in dates)
+            foreach (DateTime time in times)
             {
-                int fee = GetTollFee(date);
+                int fee = GetTollFee(time);
                 if (fee == 0)
                     continue;
 
-                if (!prevTime.HasValue || (date - prevTime.Value).TotalHours > 1)
+                if (!prevTime.HasValue || (time - prevTime.Value).TotalHours > 1)
                 {
                     total += fee;
                     prevFee = fee;
-                    prevTime = date;
+                    prevTime = time;
                 }
                 else if (fee > prevFee)
                 {
                     total += fee - prevFee;
                     prevFee = fee;
                     if (variant != TimeFrameVariant.Fixed)
-                        prevTime = date;
+                        prevTime = time;
                 }
                 else if (variant == TimeFrameVariant.Extending)
-                    prevTime = date;
+                    prevTime = time;
 
 
                 if (total >= max)
@@ -129,10 +147,10 @@ namespace TollFeeCalculator
             return total;
         }
 
-        private static int GetTollFee(DateTime date)
+        private static int GetTollFee(DateTime time)
         {
             foreach (TollFee fee in fees)
-                if (fee.TryGetFee(date, out int v))
+                if (fee.TryGetFee(time, out int v))
                     return v;
 
             return 0;

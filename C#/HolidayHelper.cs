@@ -61,7 +61,7 @@
         private static DateTime GetEaster(int year)
         {
             if (year < 1900 || year > 2099)
-                throw new ArgumentException("The year must be in the range [1900, 2099]", nameof(year));
+                throw new ArgumentOutOfRangeException(nameof(year), "The year must be in the range [1900, 2099]");
 
             int a = year % 19;
             int b = year % 4;

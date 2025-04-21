@@ -1,7 +1,13 @@
 ﻿namespace TollFeeCalculator
 {
+    // This class is based on https://sv.wikipedia.org/wiki/Helgdagar_i_Sverige
     public static class HolidayHelper
     {
+        /// <summary>
+        /// Checks whether a certain date is a bank holiday in Sweden
+        /// </summary>
+        /// <param name="date">The date to check</param>
+        /// <returns>True if bank holiday, false otherwise</returns>
         public static bool IsSwedishBankHoliday(DateTime date)
         {
             // Fixed dates
@@ -44,6 +50,7 @@
 
         private static DateTime GetMidsummerDay(int year)
         {
+            // Pick first Saturday on or after 20th of June
             DateTime day = new(year, 6, 20);
             while (day.DayOfWeek != DayOfWeek.Saturday)
                 day = day.AddDays(1);
@@ -52,12 +59,14 @@
 
         private static DateTime GetAllHallowsDay(int year)
         {
+            // Pick first Saturday on or after 31st of October
             DateTime day = new(year, 10, 31);
             while (day.DayOfWeek != DayOfWeek.Saturday)
                 day = day.AddDays(1);
             return day;
         }
 
+        // Based on https://sv.wikipedia.org/wiki/P%C3%A5skdagen
         private static DateTime GetEaster(int year)
         {
             if (year < 1900 || year > 2099)
